@@ -58,27 +58,52 @@ let crawlLeft2 = new Image(); crawlLeft2.src = "./images-folder/crawl-left-2.png
 let dashingLeft = new Image(); dashingLeft.src = "./images-folder/dashing-left.png"
 let dashingRight = new Image(); dashingRight.src = "./images-folder/dashing-right.png"
 
+let adminMode = false;
+
+let adminMovingLeft = false;
+let adminMovingRight = false;
+let adminMovingUp = false;
+let adminMovingDown = false;
+
 document.addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 's') {
-        if (falling && !alreadyDashed) {velo += 16; alreadyDashed = true;}
+        if (falling && !alreadyDashed) {velo += 16.5; alreadyDashed = true;}
+        else if (adminMode) {adminMovingDown = true}
+    }
+    if (e.key === 'ArrowUp') {
+        if (adminMode) {adminMovingUp = true}
     }
     if (e.key === 'ArrowLeft' || e.key === 'a') {
-        inputLeft = true;
+        if (!adminMode) {inputLeft = true}
+        else if (adminMode) {adminMovingLeft = true}
     }
     if (e.key === 'ArrowRight' || e.key === 'd') {
-        inputRight = true;
+        if (!adminMode) {inputRight = true}
+        else if (adminMode) {adminMovingRight = true}
     }
     if (e.key === 'c') {
         cameraNeedsMove = true;
+    }
+    if (e.key === 'q') {
+        adminMode = !adminMode
+        alert ("Admin mode is now " + adminMode)
     }
 });
 
 document.addEventListener('keyup', e => {
     if (e.key === 'ArrowLeft' || e.key === 'a') {
         inputLeft = false;
+        adminMovingLeft = false;
     }
     if (e.key === 'ArrowRight' || e.key === 'd') {
         inputRight = false;
+        adminMovingRight = false;
+    }
+    if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 's') {
+        adminMovingDown = false;
+    }
+    if (e.key === 'ArrowUp') {
+        adminMovingUp = false;
     }
 })
 
@@ -115,6 +140,10 @@ function moveCamera(dist) {
 
     bgX -= dist/2
     playerX -= dist
+
+    playerSpawnX2 -= dist
+    playerSpawnX3 -= dist
+    playerSpawnX4 -= dist
 }
 
 function collisions() {
@@ -397,18 +426,33 @@ let cameraTimer = 0;
 let cameraTimerMax1 = 144;
 let cameraNeedsMove1 = false;
 let camera1Done = false;
+let playerSpawnX2 = 1550;
 let cameraTimerMax2 = 129;
 let cameraNeedsMove2 = false;
 let camera2Done = false;
+let playerSpawnX3 = 2800;
 let cameraTimerMax3 = 144;
 let cameraNeedsMove3 = false;
 let camera3Done = false;
+let playerSpawnX4 = 4300
 
 function animate() {
     ctx.clearRect(0,0,canvas.width, canvas.height)
-    if (cameraTimer > cameraTimerMax1 && cameraNeedsMove1 === true) {cameraNeedsMove1 = false; playerSpawnX = 100; cameraTimer = 0; camera1Done = true;}
-    if (cameraTimer > cameraTimerMax2 && cameraNeedsMove2 === true) {cameraNeedsMove2 = false; cameraTimer = 0; camera2Done = true; playerSpawnX = 50; camera1Done = false;}
-    if (cameraTimer > cameraTimerMax3 && cameraNeedsMove3 === true) {cameraNeedsMove3 = false; cameraTimer = 0; camera3Done = true; playerSpawnX = 100; playerSpawnY = 500;}
+
+    if (!adminMode) {adminMovingDown = false; adminMovingLeft = false; adminMovingRight = false; adminMovingUp = false}
+
+    if (adminMovingDown) {playerY += 5}
+    if (adminMovingUp) {playerY -= 5}
+    if (adminMovingLeft) {playerX -= 5}
+    if (adminMovingRight) {playerX += 5}
+
+    if (cameraNeedsMove1) {playerSpawnX = playerSpawnX2}
+    if (cameraNeedsMove2) {playerSpawnX = playerSpawnX3}
+    if (cameraNeedsMove3) {playerSpawnX = playerSpawnX4}
+
+    if (cameraTimer > cameraTimerMax1 && cameraNeedsMove1 === true) {cameraNeedsMove1 = false; playerSpawnX = playerSpawnX2; cameraTimer = 0; camera1Done = true;}
+    if (cameraTimer > cameraTimerMax2 && cameraNeedsMove2 === true) {cameraNeedsMove2 = false; cameraTimer = 0; camera2Done = true; playerSpawnX = playerSpawnX3; camera1Done = false;}
+    if (cameraTimer > cameraTimerMax3 && cameraNeedsMove3 === true) {cameraNeedsMove3 = false; cameraTimer = 0; camera3Done = true; playerSpawnX = playerSpawnX4; playerSpawnY = 500;}
 
     if (cameraNeedsMove1 || cameraNeedsMove2 || cameraNeedsMove3) {
         moveCamera(10);
@@ -417,8 +461,8 @@ function animate() {
 
     if (playerX > 1450 && !camera2Done) {cameraNeedsMove1 = true}
     if (playerX > 1400 && camera1Done) {cameraNeedsMove2 = true}
-    if (playerX > 1450 && camera2Done) {cameraNeedsMove3 = true}
-    
+    if (playerX > 1450 && camera2Done) {cameraNeedsMove3 = true; playerSpawnY = 500}
+
     //boinger timer
     for (const boinger of bounces) {
         boinger[3] = Math.max(boinger[3] - 1, 0)
@@ -438,7 +482,8 @@ function animate() {
     movingRight = inputRight && !inputLeft;
 
 
-    collisions()
+    if (!adminMode) {collisions()}
+    
 
 
     requestAnimationFrame(animate)
