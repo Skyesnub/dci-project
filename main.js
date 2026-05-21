@@ -51,6 +51,9 @@ decoBrick.src = "./images-folder/wood-deco-block.png"
 let bg = new Image();
 bg.src = "./images-folder/wood-bg.webp"
 
+let wizard = new Image();
+wizard.src = "./images-folder/wizard-guy-angrier.png"
+
 let crawlRight1 = new Image(); crawlRight1.src = "./images-folder/crawl-right-1.png"
 let crawlRight2 = new Image(); crawlRight2.src = "./images-folder/crawl-right-2.png"
 let crawlLeft1 = new Image(); crawlLeft1.src = "./images-folder/crawl-left-1.png"
@@ -67,18 +70,18 @@ let adminMovingDown = false;
 
 document.addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 's') {
-        if (falling && !alreadyDashed) {velo += 16.5; alreadyDashed = true;}
+        if (falling && !alreadyDashed) {velo += 17; alreadyDashed = true;}
         else if (adminMode) {adminMovingDown = true}
     }
     if (e.key === 'ArrowUp') {
         if (adminMode) {adminMovingUp = true}
     }
     if (e.key === 'ArrowLeft' || e.key === 'a') {
-        if (!adminMode) {inputLeft = true}
+        if (!adminMode && !wizardTransitionOn) {inputLeft = true}
         else if (adminMode) {adminMovingLeft = true}
     }
     if (e.key === 'ArrowRight' || e.key === 'd') {
-        if (!adminMode) {inputRight = true}
+        if (!adminMode && !wizardTransitionOn) {inputRight = true}
         else if (adminMode) {adminMovingRight = true}
     }
     if (e.key === 'c') {
@@ -87,6 +90,9 @@ document.addEventListener('keydown', e => {
     if (e.key === 'q') {
         adminMode = !adminMode
         alert ("Admin mode is now " + adminMode)
+    }
+    if (e.key === 'k' && wizardTransitionOn) {
+        wizardXTimer = 1200;
     }
 });
 
@@ -140,6 +146,7 @@ function moveCamera(dist) {
 
     bgX -= dist/2
     playerX -= dist
+    wizardX -= dist
 
     playerSpawnX2 -= dist
     playerSpawnX3 -= dist
@@ -353,7 +360,23 @@ function choosePlayerImage() {
     }
 }
 
-let bgX = 0
+let bgX = 0;
+
+let wizardX = 200;
+let wizardY = 400;
+
+let wizardSpeed = 0.25;
+let dWizard = 1;
+
+let wizardSpeedX = 1;
+let wizardAccX = 0.5;
+const wizardXTimerMax = 1200;
+let wizardXTimer = 0;
+
+let wizardMaxY = 420;
+let wizardMinY = 380;
+
+let wizardTransitionOn = true;
 
 function draw() {
     //bg
@@ -412,6 +435,8 @@ function draw() {
     ctx.fillStyle = 'black'
     choosePlayerImage()
 
+    ctx.drawImage(wizard, wizardX, wizardY, 200, 200)
+
     //red flash for death
     redFlashTimer = Math.max(0, redFlashTimer - 0.5);
     ctx.globalAlpha = redFlashTimer / 10;
@@ -435,6 +460,8 @@ let cameraTimerMax3 = 144;
 let cameraNeedsMove3 = false;
 let camera3Done = false;
 let playerSpawnX4 = 4300
+
+let playerWon = false;
 
 function animate() {
     ctx.clearRect(0,0,canvas.width, canvas.height)
@@ -463,13 +490,98 @@ function animate() {
     if (playerX > 1400 && camera1Done) {cameraNeedsMove2 = true}
     if (playerX > 1450 && camera2Done) {cameraNeedsMove3 = true; playerSpawnY = 500}
 
+    //drawing
+    draw()
+
+    // ---- WIZARD STUFF ----
+
+    //wizard text
+    if (wizardTransitionOn) {
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'black'
+        ctx.fillRect(0, 625, canvas.width, 100)
+
+        ctx.fillStyle = "yellow"
+        ctx.font = "bold 30px Spectral"
+        if (wizardXTimer < 300) {
+            ctx.fillText("Welcome to the Wizard Curses Shop! I can sell you a ground pound, for a price!", 20, 675, 100000, 100000)
+        } else if (wizardXTimer < 450) {
+            ctx.fillText("Sure, what's the price?                [press k to skip]", 20, 675, 100000, 100000)
+        } else if (wizardXTimer < 575) {
+            ctx.fillText("It's a secret...", 20, 675, 1000000, 1000000)
+        } else if (wizardXTimer < 700) {
+            ctx.fillText("Sure, I'll take it.", 20, 675)
+        } else if (wizardXTimer < 900) {
+            ctx.fillText("Well, it will cost you the ability to walk and jump!", 20, 675)
+        } else if (wizardXTimer == 900) {
+            death()
+        } else if (wizardXTimer < 1050) {
+            ctx.fillText("No, you scammer! I will get you!", 20, 675)
+        } else if (wizardXTimer < 1300) {
+            ctx.fillText("(Hint, press the down arrow or S in midair)", 20, 675)
+        }
+    }
+
+    //win screen
+    if (playerWon) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "black";
+        ctx.fillRect(0,0, canvas.width, canvas.height)
+        ctx.globalAlpha = 1;
+        ctx.font = "bold 50px Spectral";
+        ctx.fillStyle = "white";
+        ctx.fillText("You Win!", 650, 350);
+        ctx.font = "bold 30px Spectral";
+        ctx.fillText("(You got your ability to jump back)", 525, 410)
+    }
+
+    if (dWizard == 1) {
+        wizardY += wizardSpeed
+    } else {
+        wizardY -= wizardSpeed
+    }
+
+
+    if (playerX > 1150 &&
+        playerX < 1200 &&
+        playerY > 0 &&
+        playerY < 200 &&
+        camera3Done
+    ) {
+        playerWon = true;
+        console.log("You win!")
+    }
+
+    console.log(wizardX, wizardY)
+
+    if (wizardY >= wizardMaxY) {dWizard = 2}; if (wizardY <= wizardMinY) {dWizard = 1}
+
+    if (wizardX < 1600) {wizardXTimer += 1}
+
+    if (wizardXTimer > wizardXTimerMax) {
+        wizardX += wizardSpeedX
+        wizardSpeedX += wizardAccX
+        wizardY -= wizardSpeedX / 3.5
+
+        if (wizardX > 1700) {
+            wizardX = 5300;
+            wizardY = -50;
+            wizardXTimer = -10000
+
+            wizardTransitionOn = false;
+
+            wizardMinY = -70;
+            wizardMaxY = -30;
+        }
+    }
+
     //boinger timer
     for (const boinger of bounces) {
         boinger[3] = Math.max(boinger[3] - 1, 0)
         if (boinger[3] == 0) {boinger[2] = "off"}
     }
 
-    draw()
+    
 
     playerTop = playerY
     playerBottom = playerY + playerHeight
