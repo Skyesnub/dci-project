@@ -63,6 +63,7 @@ let dashingRight = new Image(); dashingRight.src = "./images-folder/dashing-righ
 
 //sounds
 let bouncerSound = new Audio(); bouncerSound.src = "./sounds-folder/boing-sfx.mp3"
+let deathSound = new Audio(); deathSound.src = "./sounds-folder/death-sfx.mp3"
 
 let adminMode = false;
 
@@ -130,6 +131,9 @@ function death() {
     velo = 0;
 
     redFlashTimer = redFlashTimerConst;
+
+    deathSound.currentTime = 0;
+    deathSound.play();
 }
 
 
