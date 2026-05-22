@@ -61,6 +61,9 @@ let crawlLeft2 = new Image(); crawlLeft2.src = "./images-folder/crawl-left-2.png
 let dashingLeft = new Image(); dashingLeft.src = "./images-folder/dashing-left.png"
 let dashingRight = new Image(); dashingRight.src = "./images-folder/dashing-right.png"
 
+//sounds
+let bouncerSound = new Audio(); bouncerSound.src = "./sounds-folder/boing-sfx.mp3"
+
 let adminMode = false;
 
 let adminMovingLeft = false;
@@ -70,18 +73,18 @@ let adminMovingDown = false;
 
 document.addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 's') {
-        if (falling && !alreadyDashed) {velo += 17; alreadyDashed = true;}
+        if (falling && !alreadyDashed && !playerWon) {velo += 17; alreadyDashed = true;}
         else if (adminMode) {adminMovingDown = true}
     }
     if (e.key === 'ArrowUp') {
         if (adminMode) {adminMovingUp = true}
     }
-    if (e.key === 'ArrowLeft' || e.key === 'a') {
+    if (e.key === 'ArrowLeft' || e.key === 'a' && !playerWon) {
         if (!adminMode && !wizardTransitionOn) {inputLeft = true}
         else if (adminMode) {adminMovingLeft = true}
     }
     if (e.key === 'ArrowRight' || e.key === 'd') {
-        if (!adminMode && !wizardTransitionOn) {inputRight = true}
+        if (!adminMode && !wizardTransitionOn && !playerWon) {inputRight = true}
         else if (adminMode) {adminMovingRight = true}
     }
     if (e.key === 'c') {
@@ -214,6 +217,7 @@ function collisions() {
                 velo = Math.abs(velo) < 9 ? 0 : -velo * 0.5;
                 onGround = true;
                 alreadyDashed = false;
+                
             }
 
             // hitting head
@@ -241,6 +245,7 @@ function collisions() {
         } else {
             velo *= -0.5;
             falling = true;
+
         }
     }
 
@@ -322,6 +327,8 @@ function collisions() {
             boinger[3] = 15
             velo = -13;
             alreadyDashed = false;
+            bouncerSound.currentTime = 0;
+            bouncerSound.play();
         }
     }
 
@@ -468,10 +475,10 @@ function animate() {
 
     if (!adminMode) {adminMovingDown = false; adminMovingLeft = false; adminMovingRight = false; adminMovingUp = false}
 
-    if (adminMovingDown) {playerY += 5}
-    if (adminMovingUp) {playerY -= 5}
-    if (adminMovingLeft) {playerX -= 5}
-    if (adminMovingRight) {playerX += 5}
+    if (adminMovingDown) {playerY += 9}
+    if (adminMovingUp) {playerY -= 9}
+    if (adminMovingLeft) {playerX -= 9}
+    if (adminMovingRight) {playerX += 9}
 
     if (cameraNeedsMove1) {playerSpawnX = playerSpawnX2}
     if (cameraNeedsMove2) {playerSpawnX = playerSpawnX3}
@@ -503,10 +510,11 @@ function animate() {
 
         ctx.fillStyle = "yellow"
         ctx.font = "bold 30px Spectral"
+        ctx.fillText("[press k to skip]", 1380, 675)
         if (wizardXTimer < 300) {
             ctx.fillText("Welcome to the Wizard Curses Shop! I can sell you a ground pound, for a price!", 20, 675, 100000, 100000)
         } else if (wizardXTimer < 450) {
-            ctx.fillText("Sure, what's the price?                [press k to skip]", 20, 675, 100000, 100000)
+            ctx.fillText("Sure, what's the price?", 20, 675, 100000, 100000)
         } else if (wizardXTimer < 575) {
             ctx.fillText("It's a secret...", 20, 675, 1000000, 1000000)
         } else if (wizardXTimer < 700) {
@@ -532,7 +540,7 @@ function animate() {
         ctx.fillStyle = "white";
         ctx.fillText("You Win!", 650, 350);
         ctx.font = "bold 30px Spectral";
-        ctx.fillText("(You got your ability to jump back)", 525, 410)
+        ctx.fillText("(You caught the wizard.)", 600, 410)
     }
 
     if (dWizard == 1) {
@@ -551,8 +559,6 @@ function animate() {
         playerWon = true;
         console.log("You win!")
     }
-
-    console.log(wizardX, wizardY)
 
     if (wizardY >= wizardMaxY) {dWizard = 2}; if (wizardY <= wizardMinY) {dWizard = 1}
 
